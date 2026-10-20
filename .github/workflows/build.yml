@@ -1,4 +1,4 @@
-name: Build Seventh Android APK
+name: Build Android APK From Uploaded Files
 
 on:
   push:
@@ -18,12 +18,19 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Create Complete Project Structure
+      - name: Organize Project Structure and Add Gradle Files
         run: |
           mkdir -p app/src/main/java/com/example/pcunlocker
           mkdir -p app/src/main/res/layout
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/assets
+
+          [ -f MainActivity.kt ] && mv MainActivity.kt app/src/main/java/com/example/pcunlocker/
+          [ -f UnlockClient.kt ] && mv UnlockClient.kt app/src/main/java/com/example/pcunlocker/
+          [ -f UnlockViewModel.kt ] && mv UnlockViewModel.kt app/src/main/java/com/example/pcunlocker/
+          [ -f DashboardScreen.kt ] && mv DashboardScreen.kt app/src/main/java/com/example/pcunlocker/
+          [ -f CryptoUtils.kt ] && mv CryptoUtils.kt app/src/main/java/com/example/pcunlocker/
+          [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/
 
           dd if=/dev/urandom of=app/src/main/assets/payload.bin bs=1M count=18
 
@@ -86,42 +93,6 @@ jobs:
                   android:textSize="22sp"
                   android:textStyle="bold" />
           </LinearLayout>
-          EOF
-
-          cat << 'EOF' > app/src/main/AndroidManifest.xml
-          <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              package="com.example.pcunlocker">
-              <application
-                  android:allowBackup="true"
-                  android:icon="@android:drawable/sym_def_app_icon"
-                  android:label="PC Unlocker"
-                  android:supportsRtl="true"
-                  android:theme="@android:style/Theme.Material.Light.NoActionBar">
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
-                  </activity>
-              </application>
-          </manifest>
-          EOF
-
-          cat << 'EOF' > app/src/main/java/com/example/pcunlocker/MainActivity.kt
-          package com.example.pcunlocker
-
-          import android.app.Activity
-          import android.os.Bundle
-
-          class MainActivity : Activity() {
-              override fun onCreate(savedInstanceState: Bundle?) {
-                  super.onCreate(savedInstanceState)
-                  setContentView(R.layout.activity_main)
-              }
-          }
           EOF
 
       - name: Setup Gradle Environment

@@ -22,7 +22,7 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v2
 
-    - name: Auto-Structure Project & Build APK
+    - name: Create Project Structure and Files
       run: |
         mkdir -p app/src/main/java/com/example/pcunlocker app/src/main/res/layout app/src/main/assets
         
@@ -33,7 +33,7 @@ jobs:
         [ -f CryptoUtils.kt ] && mv CryptoUtils.kt app/src/main/java/com/example/pcunlocker/ || true
         [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/ || true
 
-        cat << 'EOF2' > settings.gradle
+        cat << 'EOF' > settings.gradle
         pluginManagement {
             repositories {
                 google()
@@ -50,16 +50,16 @@ jobs:
         }
         rootProject.name = "PCUnlocker"
         include ':app'
-        EOF2
+        EOF
 
-        cat << 'EOF2' > build.gradle
+        cat << 'EOF' > build.gradle
         plugins {
             id 'com.android.application' version '8.1.1' apply false
             id 'org.jetbrains.kotlin.android' version '1.8.10' apply false
         }
-        EOF2
+        EOF
 
-        cat << 'EOF2' > app/build.gradle
+        cat << 'EOF' > app/build.gradle
         plugins {
             id 'com.android.application'
             id 'org.jetbrains.kotlin.android'
@@ -92,9 +92,12 @@ jobs:
             implementation 'androidx.appcompat:appcompat:1.6.1'
             implementation 'com.google.android.material:material:1.9.0'
         }
-        EOF2
+        EOF
 
+    - name: Generate Gradle Wrapper & Build APK
+      run: |
         gradle wrapper --gradle-version 8.0
+        chmod +x gradlew
         ./gradlew assembleDebug
 
     - name: Upload Debug APK

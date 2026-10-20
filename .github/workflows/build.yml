@@ -33,7 +33,7 @@ jobs:
         [ -f CryptoUtils.kt ] && mv CryptoUtils.kt app/src/main/java/com/example/pcunlocker/ || true
         [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/ || true
 
-        cat << 'EOF' > settings.gradle
+        cat << 'EOF2' > settings.gradle
         pluginManagement {
             repositories {
                 google()
@@ -50,16 +50,16 @@ jobs:
         }
         rootProject.name = "PCUnlocker"
         include ':app'
-        EOF
+        EOF2
 
-        cat << 'EOF' > build.gradle
+        cat << 'EOF2' > build.gradle
         plugins {
             id 'com.android.application' version '8.1.1' apply false
             id 'org.jetbrains.kotlin.android' version '1.8.10' apply false
         }
-        EOF
+        EOF2
 
-        cat << 'EOF' > app/build.gradle
+        cat << 'EOF2' > app/build.gradle
         plugins {
             id 'com.android.application'
             id 'org.jetbrains.kotlin.android'
@@ -92,7 +92,7 @@ jobs:
             implementation 'androidx.appcompat:appcompat:1.6.1'
             implementation 'com.google.android.material:material:1.9.0'
         }
-        EOF
+        EOF2
 
         gradle wrapper --gradle-version 8.0
         ./gradlew assembleDebug

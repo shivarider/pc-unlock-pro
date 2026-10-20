@@ -18,14 +18,41 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Create Minimal Android Project Structure
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create Minimal Android Project
         run: |
-          mkdir -p app/src/main
+          mkdir -p app/src/main/java/com/example/pcunlocker app/src/main/res/values
+          
+          cat << 'EOF' > settings.gradle
+          include ':app'
+          EOF
+
+          cat << 'EOF' > build.gradle
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:8.1.1'
+              }
+          }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          EOF
+
           cat << 'EOF' > app/build.gradle
           plugins {
               id 'com.android.application'
           }
           android {
+              namespace 'com.example.pcunlocker'
               compileSdk 33
               defaultConfig {
                   applicationId "com.example.pcunlocker"
@@ -37,16 +64,11 @@ jobs:
           }
           EOF
 
-          cat << 'EOF' > settings.gradle
-          include ':app'
-          EOF
-
           cat << 'EOF' > app/src/main/AndroidManifest.xml
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-              package="com.example.pcunlocker">
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <application android:label="PC Unlocker">
-                  <activity android:name=".MainActivity"
-                      android:exported="true">
+                  <activity android:name=".MainActivity" android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
@@ -56,7 +78,6 @@ jobs:
           </manifest>
           EOF
 
-          mkdir -p app/src/main/java/com/example/pcunlocker
           cat << 'EOF' > app/src/main/java/com/example/pcunlocker/MainActivity.kt
           package com.example.pcunlocker
           import android.app.Activity
@@ -68,28 +89,8 @@ jobs:
           }
           EOF
 
-          cat << 'EOF' > build.gradle
-          plugins {
-              id 'com.android.application' version '8.1.0' apply false
-          }
-          EOF
-
-          cat << 'EOF' > gradle.wrapper.properties
-          distributionBase=GRADLE_USER_HOME
-          distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-bin.zip
-          zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=gradle.wrapper.path
-          EOF
-          mkdir -p gradle/wrapper
-          mv gradle.wrapper.properties gradle/wrapper/
-
-          gradle wrapper
-
-      - name: Build APK with Gradle
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
+      - name: Build Debug APK
+        run: gradle assembleDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4

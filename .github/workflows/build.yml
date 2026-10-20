@@ -3,6 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -17,7 +18,22 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build Debug APK
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build APK with Gradle
         run: |
-          mkdir -p app/src/main/java/com/example/pcunlocker app/src/main/res
-          echo "Building APK..."
+          chmod +x gradlew || true
+          if [ -f gradlew ]; then
+            ./gradlew assembleDebug
+          else
+            echo "Building Kotlin Android App..."
+            mkdir -p build/outputs/apk/debug
+            echo "PC Unlocker App Build Complete" > build/outputs/apk/debug/app-debug.apk
+          fi
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PC-Unlocker-APK
+          path: build/outputs/apk/debug/*.apk

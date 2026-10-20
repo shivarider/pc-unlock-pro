@@ -1,4 +1,4 @@
-name: Build Final Android APK
+name: Build Seventh Android APK
 
 on:
   push:

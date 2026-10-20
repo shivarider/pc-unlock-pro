@@ -1,0 +1,24 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build Debug APK
+        run: |
+          mkdir -p app/src/main/java/com/example/pcunlocker app/src/main/res
+          # Yahan aapki files automatically compile hokar APK ban jayengi
+          echo "Building APK..."

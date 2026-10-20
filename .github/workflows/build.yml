@@ -18,42 +18,46 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Create Minimal Android Project
+      - name: Create Clean Gradle Android Project
         run: |
-          mkdir -p app/src/main/java/com/example/pcunlocker app/src/main/res/values
+          mkdir -p app/src/main/java/com/example/pcunlocker
           
           cat << 'EOF' > settings.gradle
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "PCUnlocker"
           include ':app'
           EOF
 
           cat << 'EOF' > build.gradle
-          buildscript {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:8.1.1'
-              }
-          }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
+          plugins {
+              id 'com.android.application' version '8.1.0' apply false
+              id 'org.jetbrains.kotlin.android' version '1.8.10' apply false
           }
           EOF
 
           cat << 'EOF' > app/build.gradle
           plugins {
               id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
           }
+
           android {
               namespace 'com.example.pcunlocker'
               compileSdk 33
+
               defaultConfig {
                   applicationId "com.example.pcunlocker"
                   minSdk 24
@@ -67,8 +71,13 @@ jobs:
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <application android:label="PC Unlocker">
-                  <activity android:name=".MainActivity" android:exported="true">
+              <application
+                  android:allowBackup="true"
+                  android:label="PC Unlocker"
+                  android:supportsRtl="true">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
@@ -80,14 +89,19 @@ jobs:
 
           cat << 'EOF' > app/src/main/java/com/example/pcunlocker/MainActivity.kt
           package com.example.pcunlocker
+
           import android.app.Activity
           import android.os.Bundle
+
           class MainActivity : Activity() {
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
               }
           }
           EOF
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Build Debug APK
         run: gradle assembleDebug

@@ -1,123 +1,104 @@
-name: Build Complete Android APK
+name: Build Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
 
-      - name: Organize Project Files
-        run: |
-          mkdir -p app/src/main/java/com/example/pcunlocker
-          mkdir -p app/src/main/res/layout
-          mkdir -p app/src/main/res/values
-          mkdir -p app/src/main/assets
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
 
-          [ -f MainActivity.kt ] && mv MainActivity.kt app/src/main/java/com/example/pcunlocker/ || true
-          [ -f UnlockClient.kt ] && mv UnlockClient.kt app/src/main/java/com/example/pcunlocker/ || true
-          [ -f UnlockViewModel.kt ] && mv UnlockViewModel.kt app/src/main/java/com/example/pcunlocker/ || true
-          [ -f DashboardScreen.kt ] && mv DashboardScreen.kt app/src/main/java/com/example/pcunlocker/ || true
-          [ -f CryptoUtils.kt ] && mv CryptoUtils.kt app/src/main/java/com/example/pcunlocker/ || true
-          [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/ || true
+    - name: Auto-Structure Project & Build APK
+      run: |
+        mkdir -p app/src/main/java/com/example/pcunlocker app/src/main/res/layout app/src/main/assets
+        
+        [ -f MainActivity.kt ] && mv MainActivity.kt app/src/main/java/com/example/pcunlocker/ || true
+        [ -f UnlockClient.kt ] && mv UnlockClient.kt app/src/main/java/com/example/pcunlocker/ || true
+        [ -f UnlockViewModel.kt ] && mv UnlockViewModel.kt app/src/main/java/com/example/pcunlocker/ || true
+        [ -f DashboardScreen.kt ] && mv DashboardScreen.kt app/src/main/java/com/example/pcunlocker/ || true
+        [ -f CryptoUtils.kt ] && mv CryptoUtils.kt app/src/main/java/com/example/pcunlocker/ || true
+        [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/ || true
 
-          dd if=/dev/urandom of=app/src/main/assets/payload.bin bs=1M count=18
+        cat << 'EOF' > settings.gradle
+        pluginManagement {
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        rootProject.name = "PCUnlocker"
+        include ':app'
+        EOF
 
-          cat << 'EOF' > settings.gradle
-          rootProject.name = "PCUnlocker"
-          include ':app'
-          EOF
+        cat << 'EOF' > build.gradle
+        plugins {
+            id 'com.android.application' version '8.1.1' apply false
+            id 'org.jetbrains.kotlin.android' version '1.8.10' apply false
+        }
+        EOF
 
-          cat << 'EOF' > build.gradle
-          buildscript {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-              dependencies {
-                  classpath 'com.android.tools.build:gradle:7.4.2'
-                  classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.10'
-              }
-          }
-          allprojects {
-              repositories {
-                  google()
-                  mavenCentral()
-              }
-          }
-          EOF
+        cat << 'EOF' > app/build.gradle
+        plugins {
+            id 'com.android.application'
+            id 'org.jetbrains.kotlin.android'
+        }
 
-          cat << 'EOF' > app/build.gradle
-          apply plugin: 'com.android.application'
-          apply plugin: 'kotlin-android'
+        android {
+            namespace 'com.example.pcunlocker'
+            compileSdk 33
 
-          android {
-              compileSdkVersion 33
-              namespace 'com.example.pcunlocker'
+            defaultConfig {
+                applicationId "com.example.pcunlocker"
+                minSdk 24
+                targetSdk 33
+                versionCode 1
+                versionName "1.0"
+            }
 
-              defaultConfig {
-                  applicationId "com.example.pcunlocker"
-                  minSdkVersion 24
-                  targetSdkVersion 33
-                  versionCode 1
-                  versionName "1.0"
-              }
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
 
-              buildFeatures {
-                  compose true
-              }
+            kotlinOptions {
+                jvmTarget = '17'
+            }
+        }
 
-              composeOptions {
-                  kotlinCompilerExtensionVersion '1.4.3'
-              }
+        dependencies {
+            implementation 'androidx.core:core-ktx:1.10.1'
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+            implementation 'com.google.android.material:material:1.9.0'
+        }
+        EOF
 
-              compileOptions {
-                  sourceCompatibility JavaVersion.VERSION_17
-                  targetCompatibility JavaVersion.VERSION_17
-              }
+        gradle wrapper --gradle-version 8.0
+        ./gradlew assembleDebug
 
-              kotlinOptions {
-                  jvmTarget = '17'
-              }
-          }
-
-          dependencies {
-              implementation 'androidx.core:core-ktx:1.10.1'
-              implementation 'androidx.appcompat:appcompat:1.6.1'
-              implementation 'com.google.android.material:material:1.9.0'
-              implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
-              implementation 'androidx.activity:activity-compose:1.7.2'
-              
-              implementation platform('androidx.compose:compose-bom:2023.03.00')
-              implementation 'androidx.compose.ui:ui'
-              implementation 'androidx.compose.ui:ui-graphics'
-              implementation 'androidx.compose.ui:ui-tooling-preview'
-              implementation 'androidx.compose.material3:material3'
-              implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1'
-          }
-          EOF
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '7.5'
-
-      - name: Build Debug APK
-        run: gradle assembleDebug
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PC-Unlocker-APK
-          path: app/build/outputs/apk/debug/*.apk
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: pc-unlock-app
+        path: app/build/outputs/apk/debug/app-debug.apk

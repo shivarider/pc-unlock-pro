@@ -26,7 +26,6 @@ jobs:
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/assets
 
-          # Generating 15MB Asset File to ensure proper APK size
           dd if=/dev/urandom of=app/src/main/assets/data_pack.dat bs=1M count=15
 
           cat << 'EOF' > settings.gradle
@@ -125,11 +124,13 @@ jobs:
           }
           EOF
 
-      - name: Build Debug APK with Gradle 7.5
-        run: |
-          wget https://services.gradle.org/distributions/gradle-7.5-bin.zip
-          unzip -q gradle-7.5-bin.zip
-          ./gradle-7.5/bin/gradle assembleDebug
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '7.5'
+
+      - name: Build Debug APK
+        run: gradle assembleDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
